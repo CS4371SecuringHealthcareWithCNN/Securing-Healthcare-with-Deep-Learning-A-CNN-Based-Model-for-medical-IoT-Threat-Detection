@@ -1,4 +1,4 @@
-# 🏥Securing Healthcare with Deep Learning: A CNN-Based Model for medical IoT Threat Detection
+# Securing Healthcare with Deep Learning: A CNN-Based Model for medical IoT Threat Detection
 
 <div align="center">
 
@@ -14,7 +14,7 @@
 
 ---
 
-## 🔬 Overview
+## Overview
 This repository provides the implementation of our CNN-based intrusion detection model for Internet of Medical Things (IoMT) systems. The model performs multi-class classification on network traffic, distinguishing 19 attack types as well as benign traffic using the CICIoMT2024 dataset. All source code corresponds to the work presented in our paper. If you use or reference this repository, please **cite** [our paper](#-citation).
 
 **Key Features:**
@@ -23,7 +23,7 @@ This repository provides the implementation of our CNN-based intrusion detection
 - Outperforms previous state-of-the-art methods
 ---
 
-## 📊 Performance Metrics
+## Performance Metrics
 
 <div align="center">
 
@@ -35,7 +35,7 @@ This repository provides the implementation of our CNN-based intrusion detection
 
 ---
 
-## 🧠 Model Architecture
+## Model Architecture
 
 <div align="center">
 
@@ -152,6 +152,7 @@ The open-access PDF version of the paper is available on arXiv. You can read the
 Made with ❤️ by Alireza Mohamadi
 
 </div>
+
 
 
 
