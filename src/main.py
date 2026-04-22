@@ -1,8 +1,7 @@
 import os
 import argparse
-from data_loader import load_and_preprocess_data, load_and_preprocess_data_lr
-#from model import create_cnn_model, train_model
-from logistic_regression_model import create_lr_model, train_lr_model
+from data_loader import load_and_preprocess_data
+from model import create_cnn_model, train_model
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report, confusion_matrix
 
 if __name__ == "__main__":
@@ -17,16 +16,11 @@ if __name__ == "__main__":
     data_dir = os.path.join(script_dir, '..', 'data') 
 
     # Pass data_dir to the function:
-    #X_train, X_val, X_test, y_train_categorical, y_val_categorical, y_test_categorical, label_encoder = load_and_preprocess_data(
-    #    data_dir, args.class_config)  # Pass data_dir here
+    X_train, X_val, X_test, y_train_categorical, y_val_categorical, y_test_categorical, label_encoder = load_and_preprocess_data(
+        data_dir, args.class_config)  # Pass data_dir here
 
-    X_train, X_val, X_test, y_train_categorical, y_val_categorical, y_test_categorical, label_encoder = load_and_preprocess_data_lr(
-        data_dir, args.class_config)  # Pass data_dir here 
-
-    #input_shape = (X_train.shape[1], 1)
-    input_shape = (X_train.shape[1],) 
-    #model = create_cnn_model(input_shape, y_train_categorical.shape[1])
-    model = create_lr_model(input_shape, y_train_categorical.shape[1])
+    input_shape = (X_train.shape[1], 1)
+    model = create_cnn_model(input_shape, y_train_categorical.shape[1])
 
     import tensorflow as tf 
     if tf.test.gpu_device_name():
@@ -34,7 +28,7 @@ if __name__ == "__main__":
     else:
         print('GPU is not available. Using CPU.')
 
-    model = train_lr_model(model, X_train, y_train_categorical, X_val, y_val_categorical)
+    model = train_model(model, X_train, y_train_categorical, X_val, y_val_categorical)
 
     loss, accuracy = model.evaluate(X_test, y_test_categorical)
     print(f"Test Loss: {loss:.4f}")
