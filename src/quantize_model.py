@@ -13,7 +13,9 @@ def quantize_model_predict(tflite_model_bytes, X_sample):
     input_details  = interpreter.get_input_details()
     output_details = interpreter.get_output_details()
 
-    interpreter.set_tensor(input_details[0]['index'], X_sample[0:1].astype(np.float32))
-    interpreter.invoke()
-
-    return interpreter.get_tensor(output_details[0]['index'])
+    results = []
+    for sample in X_sample:
+        interpreter.set_tensor(input_details[0]['index'], [sample.astype(np.float32)])
+        interpreter.invoke()
+        results.append(interpreter.get_tensor(output_details[0]['index'])[0])
+    return np.array(results)
