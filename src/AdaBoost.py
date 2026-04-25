@@ -148,6 +148,11 @@ def model_size(model, q_weights=None):
     size += q_weights.nbytes if q_weights is not None else model.estimator_weights_.nbytes
     return size
 
+def fmt_time(seconds):
+    if seconds < 60:
+        return f"{seconds:.1f}s"
+    return f"{int(seconds//60)}m {seconds%60:.1f}s"
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="AdaBoost with FP16 and INT8 DRQ on CICIoMT2024")
     parser.add_argument("--class_config", type=int, choices=[2, 6, 19], default=2)
@@ -159,19 +164,24 @@ if __name__ == "__main__":
 
     print(f"Loading data [{args.class_config}-class config]...")
     X_train, X_test, y_train, y_test, label_encoder = load_data(data_dir, args.class_config)
-
+    
+    t_train = 0.0
+    
     if os.path.exists(model_path):
         print(f"Loading saved model from {model_path}...")
         model = joblib.load(model_path)
     else:
         print(f"\nTraining AdaBoost (n_estimators={args.n_estimators})...")
+        t_train_start = time.time()
         model = AdaBoostClassifier(
-            estimator=DecisionTreeClassifier(max_depth=1),
+            estimator=DecisionTreeClassifier(max_depth=2),
             n_estimators=args.n_estimators,
-            learning_rate=1.0,
+            learning_rate=0.5,
             random_state=42
         )
         model.fit(X_train, y_train)
+        t_train = time.time() - t_train_start
+        print(f" Training complete in {fmt_time(t_train)}")
         joblib.dump(model, model_path)
         print(f"Model saved to {model_path}")
 
@@ -217,3 +227,10 @@ if __name__ == "__main__":
     print(f"  {'INT8 Accuracy Drop':<25} {(acc_fp32-acc_int8)*100:>7.2f}%")
     print(f"  {'FP16 Size Reduction':<25} {(1-size_fp16/size_fp32)*100:>7.1f}%")
     print(f"  {'INT8 Size Reduction':<25} {(1-size_int8/size_fp32)*100:>7.1f}%")
+    print(f"\n{'='*50}")
+    print("  Timing Summary")
+    print(f"{'='*50}")
+    print(f"  Training Time:  {fmt_time(t_train) if t_train > 0 else 'skipped (loaded from .pkl)'}")
+    print(f"  FP32 Inference: {fmt_time(t_fp32)}")
+    print(f"  FP16 Inference: {fmt_time(t_fp16)}")
+    print(f"  INT8 Inference: {fmt_time(t_int8)}")
