@@ -122,3 +122,13 @@ def load_and_preprocess_data(data_dir, class_config):
     X_test = X_test.reshape(X_test.shape[0], X_test.shape[1], 1)
 
     return X_train, X_val, X_test, y_train_categorical, y_val_categorical, y_test_categorical, label_encoder
+
+# Altered loader for Logistic Regression
+def load_and_preprocess_data_lr(data_dir, class_config):
+    X_train, X_val, X_test, y_train, y_val, y_test, le = load_and_preprocess_data(data_dir, class_config)
+
+    X_train = X_train.reshape(X_train.shape[0], -1)
+    X_val   = X_val.reshape(X_val.shape[0], -1)
+    X_test  = X_test.reshape(X_test.shape[0], -1)
+
+    return X_train, X_val, X_test, y_train, y_val, y_test, le
