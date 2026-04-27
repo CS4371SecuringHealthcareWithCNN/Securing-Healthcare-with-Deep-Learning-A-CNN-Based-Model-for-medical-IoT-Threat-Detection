@@ -48,6 +48,8 @@ ATTACK_CATEGORIES_6 = {
 
 ATTACK_CATEGORIES_2 = {k: ('attack' if k != 'Benign' else 'Benign') for k in ATTACK_CATEGORIES_19}
 
+# picks the right lookup table based on class config argument
+# then searches the filename for a matching key and returns the label
 def get_attack_category(file_name, class_config):
     categories = ATTACK_CATEGORIES_2 if class_config == 2 else (
         ATTACK_CATEGORIES_6 if class_config == 6 else ATTACK_CATEGORIES_19
@@ -56,6 +58,8 @@ def get_attack_category(file_name, class_config):
         if key in file_name:
             return categories[key]
 
+# Finds all CSV files in the data/train and data/test
+# Reads and concatenates all 19 train and test CSV's into one big dataframe
 def load_data(data_dir, class_config):
     train_files = [f"{data_dir}/train/{f}" for f in os.listdir(f"{data_dir}/train") if f.endswith('.csv')]
     test_files  = [f"{data_dir}/test/{f}"  for f in os.listdir(f"{data_dir}/test")  if f.endswith('.csv')]
@@ -71,35 +75,38 @@ def load_data(data_dir, class_config):
     X_test  = test_df.drop(['Attack_Type', 'file'], axis=1)
     y_test  = test_df['Attack_Type']
 
-    label_encoder = LabelEncoder()
+    label_encoder = LabelEncoder() # assigns the correct label to each row based on which file it came from
     y_train_enc = label_encoder.fit_transform(y_train)
     y_test_enc  = label_encoder.transform(y_test)
 
-    scaler = StandardScaler()
+    scaler = StandardScaler() # normalize all features to mean =0 and std = 1
     X_train = scaler.fit_transform(X_train)
     X_test  = scaler.transform(X_test)
 
     return X_train, X_test, y_train_enc, y_test_enc, label_encoder
 
+# Compresses a float32 array into 8bit integers
 def quantize_array(arr):
     mn, mx = arr.min(), arr.max()
-    if mx == mn:
-        return np.zeros_like(arr, dtype=np.int8), float(mn), 0.0
+    if mx == mn: # maps the full range of values max and min into -128 and 127
+        return np.zeros_like(arr, dtype=np.int8), float(mn), 0.0  # quantized array + scale and zero_point for future reversal
     scale = (mx - mn) / 255.0
     zero_point = int(-mn / scale) - 128
     zero_point = max(-128, min(127, zero_point))
     q = np.clip(np.round(arr / scale) + zero_point, -128, 127).astype(np.int8)
     return q, scale, zero_point
 
+# Reverses quantize_array
 def dequantize_array(q_arr, scale, zero_point):
     return (q_arr.astype(np.float32) - zero_point) * scale
 
+# INT8 DRQ
 def apply_drq(model):
     """INT8 Dynamic Range Quantization."""
-    q_model = copy.deepcopy(model)
-    q_weights, w_scale, w_zp = quantize_array(q_model.estimator_weights_)
+    q_model = copy.deepcopy(model) #deep copy so original FP32 model is untouched
+    q_weights, w_scale, w_zp = quantize_array(q_model.estimator_weights_) # quantize estimator weights
     q_model.estimator_weights_ = dequantize_array(q_weights, w_scale, w_zp)
-    for est in q_model.estimators_:
+    for est in q_model.estimators_: # quantizes split thresholds for each of the 50 decision trees
         tree = est.tree_
         q_t, t_scale, t_zp = quantize_array(tree.threshold)
         tree.threshold[:] = dequantize_array(q_t, t_scale, t_zp)
@@ -107,16 +114,18 @@ def apply_drq(model):
         tree.value[:] = dequantize_array(q_v, v_scale, v_zp)
     return q_model, q_weights
 
+# DRQ to FP16
 def apply_fp16(model):
     """FP16 Half-Precision Quantization."""
     q_model = copy.deepcopy(model)
     q_model.estimator_weights_ = q_model.estimator_weights_.astype(np.float16)
-    for est in q_model.estimators_:
+    for est in q_model.estimators_: # converts all weights and tree values from 32 bit to 16 bit
         tree = est.tree_
         tree.threshold[:] = tree.threshold.astype(np.float16)
         tree.value[:] = tree.value.astype(np.float16)
     return q_model
 
+# converts integer predictions back to string labels for readability
 def evaluate(model, X_test, y_test, label_encoder, label="Model"):
     t0 = time.time()
     y_pred_enc = model.predict(X_test)
@@ -125,9 +134,9 @@ def evaluate(model, X_test, y_test, label_encoder, label="Model"):
     y_pred = label_encoder.inverse_transform(y_pred_enc)
     y_true = label_encoder.inverse_transform(y_test)
 
-    acc  = accuracy_score(y_true, y_pred)
-    prec = precision_score(y_true, y_pred, average='weighted', zero_division=0)
-    rec  = recall_score(y_true, y_pred, average='weighted', zero_division=0)
+    acc  = accuracy_score(y_true, y_pred) # % of predictions that were correct
+    prec = precision_score(y_true, y_pred, average='weighted', zero_division=0) # of oall attack predictions, how many were real
+    rec  = recall_score(y_true, y_pred, average='weighted', zero_division=0) # of all real attacks, how many were caught
     f1   = f1_score(y_true, y_pred, average='weighted', zero_division=0)
 
     print(f"\n{'='*40}")
@@ -143,11 +152,13 @@ def evaluate(model, X_test, y_test, label_encoder, label="Model"):
 
     return acc, prec, rec, f1, elapsed
 
+# calculates memory footprint of the model in bytes
 def model_size(model, q_weights=None):
-    size = sum(e.tree_.threshold.nbytes + e.tree_.value.nbytes for e in model.estimators_)
-    size += q_weights.nbytes if q_weights is not None else model.estimator_weights_.nbytes
+    size = sum(e.tree_.threshold.nbytes + e.tree_.value.nbytes for e in model.estimators_) # sum threshold + value arrays across all 50 trees
+    size += q_weights.nbytes if q_weights is not None else model.estimator_weights_.nbytes # adds estimator weights array
     return size
 
+# formats raw seconds into a more readable format. Used for the timing summary, mostly to see how long training and testing takes for the model and its DRQ'd variants
 def fmt_time(seconds):
     if seconds < 60:
         return f"{seconds:.1f}s"
