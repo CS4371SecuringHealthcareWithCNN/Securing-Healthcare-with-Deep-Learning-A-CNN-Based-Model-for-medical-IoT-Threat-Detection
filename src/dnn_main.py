@@ -2,7 +2,7 @@ import os
 import argparse
 import numpy as np
 from data_loader import load_and_preprocess_data
-from model import create_model, train_model
+from dnn_model import create_model, train_model
 from quantize_model import quantize_model, save_quantized_model, get_model_size
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report, confusion_matrix
 

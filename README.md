@@ -17,7 +17,7 @@
 
 ---
 
-## Overview WIP
+## Overview
 This repository provides implementations of Logistic Regression, AdaBoost, a Deep Neural Network (DNN), and Random Forest alongside the original CNN model proposed in the paper, each evaluated in both their uncompressed and compressed forms. All models are applied to the task of intrusion detection in Internet of Medical Things (IoMT) systems, classifying network traffic across three configurations: binary (2-class), categorical (6-class), and multiclass (19-class).
 ---
 
@@ -33,7 +33,7 @@ This repository provides implementations of Logistic Regression, AdaBoost, a Dee
 
 ---
 
-## 🚀 Quick Start WIP
+## 🚀 Quick Start
 
 ### Step 1: Clone Repository
 ```bash
@@ -111,7 +111,7 @@ Once the models are trained, and the current files are present
 * adaboost_model_class19.pkl for multiclass classification
 
 Once pretrained models are loaded a full classification report will be printed in the terminal. Followed by a quantization impact summary table.
-## 📂 Project Structure WIP
+## 📂 Project Structure
 
 ```
 project/
@@ -120,6 +120,8 @@ project/
 │   └── test/             # Testing CSV files
 ├── src/
 │   ├── AdaBoost.py
+|   |── cnn_compression.py
+|   |── cnn_main.py
 │   ├── data_loader.py    # Data loading and preprocessing
 │   ├── dnn_main.py  
 │   ├── dnn_model.py  
@@ -129,40 +131,11 @@ project/
 │   ├── model.py          # CNN model definition and training
 │   ├── quantize_model.py   # LR model compression
 │   └── random_forest.py  
+Pre-Trained Models
+|   |──adaboost_model_class[x].pkl
+|   |──baseline.keras
+│   └── class_names.npy
 ├── requirements.txt      # Project dependencies
 ├── README.md             # Project documentation (this file)
 └── README_DATA.md        # Data preparation guide
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
