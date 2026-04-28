@@ -1,29 +1,27 @@
 # Securing Healthcare with Deep Learning: A CNN-Based Model for medical IoT Threat Detection
 
-<div align="center">
+# CS4371 Group 9
+### Christina Martinez · Mason Meinscher · Roman Merlick · Jay Suh · Zane Zezulka
 
-[![IEEE Conference](https://img.shields.io/badge/IEEE-ICIS%202024-blue.svg)](https://doi.org/10.1109/ICIS64839.2024.10887510)
-[![arXiv](https://img.shields.io/badge/arXiv-2410.23306-b31b1b.svg)](https://arxiv.org/abs/2410.23306)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
-[![Presentation](https://img.shields.io/badge/YouTube-Presentation-red.svg)](https://youtu.be/hPV5H9kTbYM?si=fWtb_eaIiLQ3uGEy)
+*Based on:* [Securing Healthcare with Deep Learning: A CNN-Based Model for medical IoT Threat Detection](https://arxiv.org/abs/2410.23306) | [GitHub](https://github.com/alirezamohamadiam/Securing-Healthcare-with-Deep-Learning-A-CNN-Based-Model-for-medical-IoT-Threat-Detection)
 
-*Official Implementation - Presented at the 19th Iranian Conference on Intelligent Systems (ICIS 2024)* **IEEE Indexed**
-</div>
+
+**The README file in the GitHub repository indicates clearly how to easily clone and build/deploy the code.**
+**The README file in the GitHub repository clearly indicates what functionality does (and does not, if applicable) work in the final version of the application.**
+
+**Additionally, it should include references to two scholarly papers:** 
+- one representing prior research, serving as the foundational bedrock for the current study, and 
+- another representing contemporary work that acknowledges and builds upon the findings of the current paper. 
+- This practice is akin to the methodology of an archeologist, meticulously documenting the lineage of ideas and advancements within the academic landscape.
 
 
 ---
 
-## Overview
-This repository provides the implementation of our CNN-based intrusion detection model for Internet of Medical Things (IoMT) systems. The model performs multi-class classification on network traffic, distinguishing 19 attack types as well as benign traffic using the CICIoMT2024 dataset. All source code corresponds to the work presented in our paper. If you use or reference this repository, please **cite** [our paper](#-citation). This work has received **15+ citations** and **20+ GitHub stars**.
-
-**Key Features:**
-- Multi-classification support: Binary (2-class), Categorical (6-class), and Multiclass (19-class)
-- Perfect accuracy of 0.99 across all classification tasks
-- Outperforms previous state-of-the-art methods
+## Overview WIP
+This repository provides implementations of Logistic Regression, AdaBoost, a Deep Neural Network (DNN), and Random Forest alongside the original CNN model proposed in the paper, each evaluated in both their uncompressed and compressed forms. All models are applied to the task of intrusion detection in Internet of Medical Things (IoMT) systems, classifying network traffic across three configurations: binary (2-class), categorical (6-class), and multiclass (19-class).
 ---
 
-## Performance Metrics
+## Performance Metrics WIP
 
 <div align="center">
 
@@ -35,23 +33,11 @@ This repository provides the implementation of our CNN-based intrusion detection
 
 ---
 
-## Model Architecture
-
-<div align="center">
-
-![CNN Architecture](https://github.com/user-attachments/assets/e76e8cb4-a185-4726-abcb-b50482786088)
-
-*Architecture of the CNN model for IoMT attack classification*
-
-</div>
-
----
-
-## 🚀 Quick Start
+## 🚀 Quick Start WIP
 
 ### Step 1: Clone Repository
 ```bash
-git clone https://github.com/alirezamohamadiam/Securing-Healthcare-with-Deep-Learning-A-CNN-Based-Model-for-medical-IoT-Threat-Detection.git
+git clone https://github.com/CS4371SecuringHealthcareWithCNN/Securing-Healthcare-with-Deep-Learning-A-CNN-Based-Model-for-medical-IoT-Threat-Detection
 ```
 > Make sure Git is installed on your machine. If not, grab it from: https://git-scm.com/install
 
@@ -66,20 +52,7 @@ pip install -r requirements.txt
 ```
 > **Note:** Python 3.7+ is required
 
-### Step 3: Download Dataset
-Download the **CIC IoMT Dataset 2024** from:  
-🔗 [https://www.unb.ca/cic/datasets/iomt-dataset-2024.html](https://www.unb.ca/cic/datasets/iomt-dataset-2024.html)
-
-### Step 4: Prepare Data
-Place the CSV files in the data directories:
-```
-data/
-├── train/     ← Put training CSV files here
-└── test/      ← Put testing CSV files here
-```
-> **Detailed instructions:** See [`README_DATA.md`](https://github.com/alirezamohamadiam/Securing-Healthcare-with-Deep-Learning-A-CNN-Based-Model-for-medical-IoT-Threat-Detection/blob/main/README_DATA.md)
-
-### Step 5: Run Training
+### Step 3: Run Training
 Navigate to the `src` directory:
 ```bash
 cd src
@@ -100,7 +73,7 @@ python main.py --class_config 2
 ```
 ---
 
-## 📂 Project Structure
+## 📂 Project Structure WIP
 
 ```
 project/
@@ -115,43 +88,7 @@ project/
 ├── README.md             # Project documentation (this file)
 └── README_DATA.md        # Data preparation guide
 ```
----
 
-## 📚 Citation
-
-If you use this code or find our work helpful, please cite our paper:
-```bibtex
-@inproceedings{mohammadi2024securing,
-  title={Securing Healthcare with Deep Learning: A CNN-Based Model for medical IoT Threat Detection},
-  author={Mohammadi, Alireza and Ghahramani, Hosna and Asghari, Seyyed Amir and Aminian, Mehdi},
-  booktitle={2024 19th Iranian Conference on Intelligent Systems (ICIS)},
-  pages={168--173},
-  year={2024},
-  organization={IEEE}
-}
-```
-**Plain Text Citation (APA style):**
-```
-Mohammadi, A., Ghahramani, H., Asghari, S. A., & Aminian, M. (2024, October). Securing Healthcare with Deep Learning: A CNN-Based Model for medical IoT Threat Detection. In 2024 19th Iranian Conference on Intelligent Systems (ICIS) (pp. 168-173). IEEE.
-```
-
-**Links:**
-The open-access PDF version of the paper is available on arXiv. You can read the full article there for free. 
-
-* 📄 **IEEE Xplore (official version, not open access):**
-  [https://doi.org/10.1109/ICIS64839.2024.10887510](https://doi.org/10.1109/ICIS64839.2024.10887510)
-
-* 📄 **arXiv (PDF and open-access version):**
-  [https://arxiv.org/abs/2410.23306](https://arxiv.org/abs/2410.23306)
----
-
-<div align="center">
-
-**⭐ If you find this work useful, please consider giving it a star! ⭐**
-
-Made with ❤️ by Alireza Mohamadi
-
-</div>
 
 
 
