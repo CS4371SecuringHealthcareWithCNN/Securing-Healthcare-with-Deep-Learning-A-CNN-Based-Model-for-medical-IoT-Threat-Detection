@@ -1,13 +1,13 @@
-import os 
 import argparse
+import os
 import numpy as np
+import tensorflow as tf
 from data_loader import get_attack_category, ATTACK_CATEGORIES_2, ATTACK_CATEGORIES_6, ATTACK_CATEGORIES_19
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report, confusion_matrix
 import pandas as pd
-import joblib
-import os
+
 
 def load_data_for_rf(data_dir, class_config):
     """Load and preprocess data for Random Forest (no reshaping or one-hot encoding)."""
@@ -70,14 +70,45 @@ if __name__ == "__main__":
     print("\nClassification Report:\n", classification_report(y_test_decoded, y_pred))
     print("\nConfusion Matrix:\n", confusion_matrix(y_test_decoded, y_pred))
 
+rf_probs = model.predict_proba(X_test)
 
+input_dim = rf_probs.shape[1]
+tf_model = tf.keras.Sequential([
+    tf.keras.layers.Dense(32, activation='relu', input_shape=(input_dim,)),
+    tf.keras.layers.Dense(input_dim, activation='softmax')
+])
 
-joblib.dump(model, 'rf_model.pkl')
-original_size = os.path.getsize('rf_model.pkl')
+tf_model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+tf_model.fit(rf_probs, y_test, epochs=5, batch_size=32, verbose=0)
+
+tf_model.save('rf_model.keras')
+original_size = os.path.getsize('rf_model.keras')
 print(f"Original model size: {original_size / 1024:.2f} KB")
 
+converter = tf.lite.TFLiteConverter.from_keras_model(tf_model)
+converter.optimizations = [tf.lite.Optimize.DEFAULT]
+tflite_model = converter.convert()
 
-joblib.dump(model, 'rf_model_compressed.pkl', compress=3)
-compressed_size = os.path.getsize('rf_model_compressed.pkl')
-print(f"Compressed model size: {compressed_size / 1024:.2f} KB")
-print(f"Size reduction: {(1 - compressed_size/original_size) * 100:.2f}%")
+with open('rf_model_compressed.tflite', 'wb') as f:
+    f.write(tflite_model)
+
+compressed_size = os.path.getsize('rf_model_compressed.tflite')
+print(f"Compressed model size:  {compressed_size / 1024:.2f} KB")
+print(f"Size reduction: {(1 - compressed_size / original_size) * 100:.2f}%")
+
+interpreter = tf.lite.Interpreter(model_path='rf_model_compressed.tflite')
+interpreter.allocate_tensors()
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
+
+preds = []
+for i in range(len(rf_probs)):
+    input_data = np.array([rf_probs[i]], dtype=np.float32)
+    interpreter.set_tensor(input_details[0]['index'], input_data)
+    interpreter.invoke()
+    output = interpreter.get_tensor(output_details[0]['index'])
+    preds.append(np.argmax(output))
+
+preds = label_encoder.inverse_transform(preds)
+accuracy = accuracy_score(y_test_decoded, preds)
+print(f"Compressed Model Accuracy: {accuracy: .4f}")
