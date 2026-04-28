@@ -6,6 +6,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report, confusion_matrix
 import pandas as pd
+import joblib
+import os
 
 def load_data_for_rf(data_dir, class_config):
     """Load and preprocess data for Random Forest (no reshaping or one-hot encoding)."""
@@ -67,3 +69,15 @@ if __name__ == "__main__":
     print("F1-Score:", f1)
     print("\nClassification Report:\n", classification_report(y_test_decoded, y_pred))
     print("\nConfusion Matrix:\n", confusion_matrix(y_test_decoded, y_pred))
+
+
+
+joblib.dump(model, 'rf_model.pkl')
+original_size = os.path.getsize('rf_model.pkl')
+print(f"Original model size: {original_size / 1024:.2f} KB")
+
+
+joblib.dump(model, 'rf_model_compressed.pkl', compress=3)
+compressed_size = os.path.getsize('rf_model_compressed.pkl')
+print(f"Compressed model size: {compressed_size / 1024:.2f} KB")
+print(f"Size reduction: {(1 - compressed_size/original_size) * 100:.2f}%")
