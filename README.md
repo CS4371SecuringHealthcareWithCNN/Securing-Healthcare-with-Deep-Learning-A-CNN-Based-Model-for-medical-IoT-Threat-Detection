@@ -25,10 +25,14 @@ This repository provides implementations of Logistic Regression, AdaBoost, a Dee
 
 <div align="center">
 
-![Model Comparison](https://github.com/user-attachments/assets/7dc2bd46-c2ea-49cb-b94f-7ee42b268d56)
+![Model Comparison](/images/Performance_Metrics.png)
 
 *Performance comparison across different classification tasks*
 
+* CNN, and Random Forest seem to compress very well while also keeping performance metrics relatively high.
+* AdaBoost on the other hand while having somewhat consistently high results does not compress well and results in compression being around 1%-5% per class configuration. Any techniques to compress further risk tanking performance further. 
+* Next is Logistic Regression, it compresses extremely well, almost a 10x compression! The caveat however, is that precision, recall, and F1 scores plummet.
+* Lastly Deep Neural Network, which compresses somewhat very well, but seeing as the model is already quite small ~0.21 MB it does still compress quite a bit ~68% resulting in a compressed model size of about 0.07 MB. Its kinda like AdaBoost in terms of starting small, but compresses way better, and having the worst scores out of all the models.
 </div>
 
 ---
@@ -139,3 +143,11 @@ Pre-Trained Models
 ├── README.md             # Project documentation (this file)
 └── README_DATA.md        # Data preparation guide
 ```
+
+## Next Steps
+
+Quantization aware training.
+
+* We want to integrate quantization directly into the pretraining and fine tuning process rather than Post Training Quantization which is what we have. [You can read more Post Training Quantization Here](https://www.ibm.com/think/topics/quantization-aware-training)
+
+![pre-training quantization](/images/quantization-aware-training-116x9.png)
