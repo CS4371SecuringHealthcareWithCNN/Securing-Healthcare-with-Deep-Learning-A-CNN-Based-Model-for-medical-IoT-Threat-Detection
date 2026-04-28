@@ -86,6 +86,7 @@ def predict_tflite(tflite_bytes: bytes, X_test: np.ndarray) -> np.ndarray:
             o = (o.astype(np.float32) - out_zero) * out_scale
         preds[i] = int(np.argmax(o[0]))
     return preds
+
 def compute_metrics(y_true: np.ndarray, y_pred: np.ndarray, num_classes: int) -> Dict:
     labels = np.arange(num_classes)
     return {

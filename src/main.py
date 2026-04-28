@@ -30,6 +30,29 @@ if __name__ == "__main__":
 
     model = train_model(model, X_train, y_train_categorical, X_val, y_val_categorical)
 
+    # Save data for compression
+    import numpy as np
+    model.save("baseline.keras")
+    np.save("X_test.npy", X_test)
+    np.save("y_test.npy", y_test_categorical)
+
+    # Stratified calibration: take an equal number of samples from each class.
+    # This guarantees coverage of minority attack types, which is critical for
+    # int8 quantization to estimate activation ranges correctly across all classes.
+    y_train_int = y_train_categorical.argmax(axis=1)
+    samples_per_class = 250  # 250 * 19 classes = 4750 calibration samples
+    calib_indices = []
+    for c in range(y_train_categorical.shape[1]):
+        class_indices = np.where(y_train_int == c)[0]
+        # Take the first samples_per_class indices from this class.
+        # If a class has fewer samples, take all of them.
+        n_take = min(samples_per_class, len(class_indices))
+        calib_indices.extend(class_indices[:n_take].tolist())
+    calib_indices = np.array(calib_indices)
+    np.save("X_calib.npy", X_train[calib_indices])
+    print("Saved model and test data for compression.")
+    print(f"Calibration set: {len(calib_indices)} samples ({samples_per_class} per class, where available)")
+
     loss, accuracy = model.evaluate(X_test, y_test_categorical)
     print(f"Test Loss: {loss:.4f}")
     print(f"Test Accuracy: {accuracy:.4f}")
