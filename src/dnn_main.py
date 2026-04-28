@@ -3,7 +3,7 @@ import argparse
 import numpy as np
 from data_loader import load_and_preprocess_data
 from dnn_model import create_model, train_model
-from quantize_model import quantize_model, save_quantized_model, get_model_size
+from dnn_quantize_model import quantize_model, save_quantized_model, get_model_size
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report, confusion_matrix
 
 if __name__ == "__main__":
@@ -30,9 +30,18 @@ if __name__ == "__main__":
         print('GPU is available!')
     else:
         print('GPU is not available. Using CPU.')
-
-    model = train_model(model, X_train, y_train_categorical, X_val, y_val_categorical)
-
+    
+    # Saving the trained model to prevent re-training
+    model_save_path = os.path.join(script_dir, f"dnn_baseline_{args.class_config}class.keras")
+    
+    if os.path.exists(model_save_path):
+        print(f"Loading saved model from {model_save_path}...")
+        model = tf.keras.models.load_model(model_save_path)
+    else:
+        model = train_model(model, X_train, y_train_categorical, X_val, y_val_categorical)
+        model.save(model_save_path)
+        print(f"Model saved for {model_save_path}")
+        
     loss, accuracy = model.evaluate(X_test, y_test_categorical)
     print(f"Test Loss: {loss:.4f}")
     print(f"Test Accuracy: {accuracy:.4f}")
@@ -75,7 +84,7 @@ if __name__ == "__main__":
 
     # Test the quantized model
     print("\n--- Testing Quantized Model ---")
-    from quantize_model import load_quantized_model
+    from dnn_quantize_model import load_quantized_model
     interpreter = load_quantized_model(quantized_path)
     
     # Get input/output details
