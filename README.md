@@ -73,6 +73,27 @@ python main.py --class_config 2
 ```
 ---
 
+### Instructions for CNN
+
+Navigate to the `src` directory:
+```bash
+cd src
+```
+Run the model with this configuration 
+```bash
+python cnn_main.py --class_config <num_classes>
+```
+Once trained and these files are present:
+    baseline.keras- Trained CNN
+    X_test.npy, Y_test.npy- preprocessed test data
+    X_calib.npy- stratified training samples for int8 calibration
+    class_names.npy- readable class names
+Run compression and benchmarking:
+
+python cnn_compression.py --model baseline.keras --X_test X_test.npy --y_test y_test.npy --X_calib X_calib.npy --class_names class_names.npy --subsample_test (between 50000 and 200000)
+
+Output is printed in terminal and in results file
+
 ## 📂 Project Structure WIP
 
 ```
