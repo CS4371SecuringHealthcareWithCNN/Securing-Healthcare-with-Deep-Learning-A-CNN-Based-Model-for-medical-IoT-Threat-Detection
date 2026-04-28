@@ -78,12 +78,19 @@ python main.py --class_config 2
 ```
 project/
 ├── data/
-│   ├── train/            # Training CSV files (see README_DATA.md)
-│   └── test/             # Testing CSV files (see README_DATA.md)
+│   ├── train/            # Training CSV files
+│   └── test/             # Testing CSV files
 ├── src/
+│   ├── AdaBoost.py
 │   ├── data_loader.py    # Data loading and preprocessing
+│   ├── dnn_main.py  
+│   ├── dnn_model.py  
+│   ├── dnn_quantize_model.py
+│   ├── logistic_regression_model.py    # LR model definition, training, and execution
+│   ├── main.py           # Main CNN execution script 
 │   ├── model.py          # CNN model definition and training
-│   └── main.py           # Main execution script
+│   ├── quantize_model.py   # LR model compression
+│   └── random_forest.py  
 ├── requirements.txt      # Project dependencies
 ├── README.md             # Project documentation (this file)
 └── README_DATA.md        # Data preparation guide
