@@ -94,6 +94,23 @@ python cnn_compression.py --model baseline.keras --X_test X_test.npy --y_test y_
 
 Output is printed in terminal and in results file
 
+### Instructions for AdaBoost
+Navigate to the src directory
+```bash
+cd src
+```
+Run the model with this configuration
+```bash
+python AdaBoost.py --class_config <2, 6, or 19>
+```
+
+Once the models are trained, and the current files are present
+
+*  adaboost_model_class2.pkl for binary classification
+* adaboost_model_class6.pkl for categorical classification
+* adaboost_model_class19.pkl for multiclass classification
+
+Once pretrained models are loaded a full classification report will be printed in the terminal. Followed by a quantization impact summary table.
 ## 📂 Project Structure WIP
 
 ```
