@@ -3,12 +3,34 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 
 def create_lr_model(input_shape, num_classes):
+    """Create and compile LR model""" 
+    #create empty sequential model (linear stack)
     model = Sequential()
+
+    # Dense applies (input x weights + bias) across all input features at once 
+    # # number of neurons: num_classes 
+    # # softmax: convert scores to probabilities 
+    # # shape: matrix of samples X features
     model.add(Dense(num_classes, activation='softmax', input_shape=input_shape))
+
+    # optimizer implements the Adam algorithm 
+    # categorical_crossentropy: loss function to measure performance of model 
+    # monitor accuracy during training
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
     return model
 
 def train_lr_model(model, X_train, y_train_categorical, X_val, y_val_categorical, epochs=10, batch_size=32):
+    """Train LR model""" 
+    # model: compiled model 
+    # X_train: training feature data with shape (samples, features) 
+    # y_train_categorical: training labels with shape (samples, num_classes), one-hot encoded 
+    # X_val: validation data to monitor overfitting 
+    # y_val_categorical: validation labels, one-hot encoded 
+    # epochs: number of training cycles 
+    # batch_size: number of samples analyzed at once 
+    # fit weights using categorical_crossentropy over epochs 
+    # update weights every batch 
+    # evaluate validation data after each epoch
     model.fit(X_train, y_train_categorical, epochs=epochs, batch_size=batch_size, 
               validation_data=(X_val, y_val_categorical))
     return model
