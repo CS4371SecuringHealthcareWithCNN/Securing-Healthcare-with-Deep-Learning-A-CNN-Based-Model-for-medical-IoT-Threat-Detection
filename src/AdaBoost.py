@@ -5,6 +5,7 @@ import pandas as pd
 import copy
 import time
 import joblib
+import psutil
 
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.tree import DecisionTreeClassifier
@@ -107,6 +108,35 @@ def evaluate(model, X_test, y_test, le):
         classification_report(y_true, y_pred, zero_division=0)
     )
 
+# Shows resource usage of the model as mentioned in demo
+def evaluate_with_resources(model, X_test, y_test, le, process):
+    mem_before = process.memory_info().rss
+    cpu_before = process.cpu_percent(interval=None)
+    
+    acc, prec, rec, f1, elapsed, rep = evaluate(model, X_test, y_test, le)
+    
+    time.sleep(0.1)
+    cpu_after = process.cpu_percent(interval=0.1)
+    mem_after = process.memory_info().rss
+
+    mem_before_mb = mem_before / (1024 * 1024)
+    mem_after_mb = mem_after / (1024 * 1024)
+    mem_used_mb = max(0.0, mem_after_mb - mem_before_mb)
+    
+    return {
+        "acc": acc,
+        "prec": prec,
+        "rec": rec,
+        "f1": f1,
+        "elapsed": elapsed,
+        "report": rep,
+        "cpu_before": cpu_before,
+        "cpu_after": cpu_after,
+        "mem_before_mb": mem_before_mb,
+        "mem_after_mb": mem_after_mb,
+        "mem_used_mb": mem_used_mb
+    }
+
 # formats raw seconds into a more readable format
 def fmt_time(s):
     return f"{s:.1f}s" if s < 60 else f"{int(s//60)}m {s%60:.1f}s"
@@ -116,6 +146,8 @@ if __name__ == "__main__":
     parser.add_argument("--class_config", type=int, choices=[2, 6, 19], default=2)
     parser.add_argument("--n_estimators", type=int, default=50)
     args = parser.parse_args()
+    
+    process = psutil.Process()
 
     data_dir   = r"C:\Users\suhja\OneDrive\Documents\GitHub\Securing-Healthcare-with-Deep-Learning-A-CNN-Based-Model-for-medical-IoT-Threat-Detection\data"
     model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), f"adaboost_model_class{args.class_config}.pkl")
@@ -142,20 +174,30 @@ if __name__ == "__main__":
     # FP32 Baseline
     print("Evaluating FP32...")
     size_fp32 = model_size(model)
-    acc_fp32, prec_fp32, rec_fp32, f1_fp32, t_fp32, rep_fp32 = evaluate(model, X_test, y_test, le)
+    res_fp32 = evaluate_with_resources(model, X_test, y_test, le, process)
 
     # FP16
     print("Applying FP16 (Half Precision) Quantization...")
     fp16_model = apply_fp16(model)
     size_fp16 = model_size(fp16_model)
-    acc_fp16, prec_fp16, rec_fp16, f1_fp16, t_fp16, rep_fp16 = evaluate(fp16_model, X_test, y_test, le)
+    res_fp16 = evaluate_with_resources(fp16_model, X_test, y_test, le, process)
 
     # INT8 DRQ
     print("Applying INT8 Dynamic Range Quantization...")
     int8_model, qw = apply_drq(model)
     size_int8 = model_size(int8_model, qw)
-    acc_int8, prec_int8, rec_int8, f1_int8, t_int8, rep_int8 = evaluate(int8_model, X_test, y_test, le)
+    res_int8 = evaluate_with_resources(int8_model, X_test, y_test, le, process)
 
+    
+    acc_fp32, prec_fp32, rec_fp32, f1_fp32, t_fp32, rep_fp32 = (
+        res_fp32["acc"], res_fp32["prec"], res_fp32["rec"], res_fp32["f1"], res_fp32["elapsed"], res_fp32["report"]
+    )
+    acc_fp16, prec_fp16, rec_fp16, f1_fp16, t_fp16, rep_fp16 = (
+        res_fp16["acc"], res_fp16["prec"], res_fp16["rec"], res_fp16["f1"], res_fp16["elapsed"], res_fp16["report"]
+    )
+    acc_int8, prec_int8, rec_int8, f1_int8, t_int8, rep_int8 = (
+        res_int8["acc"], res_int8["prec"], res_int8["rec"], res_int8["f1"], res_int8["elapsed"], res_int8["report"]
+    )
     # Before and After Quantization results
     print(f"\n{'='*60}")
     print("  BEFORE QUANTIZATION — FP32 (Original AdaBoost)")
@@ -180,12 +222,14 @@ if __name__ == "__main__":
 
     # Quantization Summary
     print(f"\n{'='*40}\n  Quantization Impact Summary\n{'='*40}")
-    print(f"  {'Metric':<25} {'FP32':>8} {'FP16':>8} {'INT8':>8}")
-    print(f"  {'-'*49}")
+    print(f"  {'Metric':<25} {'FP32':>10} {'FP16':>10} {'INT8':>10}")
+    print(f"  {'-'*60}")
     for name, vals in [('Accuracy',(acc_fp32,acc_fp16,acc_int8)), ('Precision',(prec_fp32,prec_fp16,prec_int8)),
                        ('Recall',(rec_fp32,rec_fp16,rec_int8)),   ('F1-Score',(f1_fp32,f1_fp16,f1_int8))]:
-        print(f"  {name:<25} {vals[0]:>8.4f} {vals[1]:>8.4f} {vals[2]:>8.4f}")
-    print(f"  {'Model Size (KB)':<25} {size_fp32/1024:>8.2f} {size_fp16/1024:>8.2f} {size_int8/1024:>8.2f}")
+        print(f"  {name:<25} {vals[0]:>10.4f} {vals[1]:>10.4f} {vals[2]:>10.4f}")
+    print(f"  {'Model Size (KB)':<25} {size_fp32/1024:>10.2f} {size_fp16/1024:>10.2f} {size_int8/1024:>10.2f}")
+    print(f"  {'Mem Used (MB)':<25} {res_fp32['mem_used_mb']:>10.2f} {res_fp16['mem_used_mb']:>10.2f} {res_int8['mem_used_mb']:>10.2f}")
+    print(f"  {'CPU % After Eval':<25} {res_fp32['cpu_after']:>10.1f} {res_fp16['cpu_after']:>10.1f} {res_int8['cpu_after']:>10.1f}")
     print(f"  {'Inference Time (ms)':<25} {t_fp32*1000:>8.1f} {t_fp16*1000:>8.1f} {t_int8*1000:>8.1f}")
     print(f"  {'-'*49}")
     print(f"  {'FP16 Accuracy Drop':<25} {(acc_fp32-acc_fp16)*100:>7.2f}%")
