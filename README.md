@@ -115,6 +115,16 @@ Once the models are trained, and the current files are present
 * adaboost_model_class19.pkl for multiclass classification
 
 Once pretrained models are loaded a full classification report will be printed in the terminal. Followed by a quantization impact summary table.
+
+### Instructions for Logistic Regression
+Navigate to the src directory
+```bash
+cd src
+```
+Run the model with this configuration
+```bash
+python logistic_regression_model.py --class_config <2, 6, or 19>
+```
 ## 📂 Project Structure
 
 ```
