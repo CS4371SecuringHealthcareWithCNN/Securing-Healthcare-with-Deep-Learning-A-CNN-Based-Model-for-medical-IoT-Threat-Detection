@@ -111,14 +111,15 @@ def evaluate(model, X_test, y_test, le):
 # Shows resource usage of the model as mentioned in demo
 def evaluate_with_resources(model, X_test, y_test, le, process):
     mem_before = process.memory_info().rss
-    cpu_before = process.cpu_percent(interval=None)
-    
-    acc, prec, rec, f1, elapsed, rep = evaluate(model, X_test, y_test, le)
-    
-    time.sleep(0.1)
-    cpu_after = process.cpu_percent(interval=0.1)
-    mem_after = process.memory_info().rss
+    process.cpu_percent(None)
 
+    t0 = time.perf_counter()
+    acc, prec, rec, f1, elapsed, rep = evaluate(model, X_test, y_test, le)
+    t_total = time.perf_counter() - t0
+
+    cpu_pct = process.cpu_percent(None)
+
+    mem_after = process.memory_info().rss
     mem_before_mb = mem_before / (1024 * 1024)
     mem_after_mb = mem_after / (1024 * 1024)
     mem_used_mb = max(0.0, mem_after_mb - mem_before_mb)
@@ -129,9 +130,9 @@ def evaluate_with_resources(model, X_test, y_test, le, process):
         "rec": rec,
         "f1": f1,
         "elapsed": elapsed,
+        "total_seconds": t_total,
         "report": rep,
-        "cpu_before": cpu_before,
-        "cpu_after": cpu_after,
+        "cpu_pct": cpu_pct,
         "mem_before_mb": mem_before_mb,
         "mem_after_mb": mem_after_mb,
         "mem_used_mb": mem_used_mb
@@ -224,15 +225,24 @@ if __name__ == "__main__":
     print(f"\n{'='*40}\n  Quantization Impact Summary\n{'='*40}")
     print(f"  {'Metric':<25} {'FP32':>10} {'FP16':>10} {'INT8':>10}")
     print(f"  {'-'*60}")
-    for name, vals in [('Accuracy',(acc_fp32,acc_fp16,acc_int8)), ('Precision',(prec_fp32,prec_fp16,prec_int8)),
-                       ('Recall',(rec_fp32,rec_fp16,rec_int8)),   ('F1-Score',(f1_fp32,f1_fp16,f1_int8))]:
+    for name, vals in [
+        ('Accuracy',  (acc_fp32, acc_fp16, acc_int8)),
+        ('Precision', (prec_fp32, prec_fp16, prec_int8)),
+        ('Recall',    (rec_fp32, rec_fp16, rec_int8)),
+        ('F1-Score',  (f1_fp32, f1_fp16, f1_int8))
+    ]:
         print(f"  {name:<25} {vals[0]:>10.4f} {vals[1]:>10.4f} {vals[2]:>10.4f}")
+
+    # size and RAM
     print(f"  {'Model Size (KB)':<25} {size_fp32/1024:>10.2f} {size_fp16/1024:>10.2f} {size_int8/1024:>10.2f}")
-    print(f"  {'Mem Used (MB)':<25} {res_fp32['mem_used_mb']:>10.2f} {res_fp16['mem_used_mb']:>10.2f} {res_int8['mem_used_mb']:>10.2f}")
-    print(f"  {'CPU % After Eval':<25} {res_fp32['cpu_after']:>10.1f} {res_fp16['cpu_after']:>10.1f} {res_int8['cpu_after']:>10.1f}")
-    print(f"  {'Inference Time (ms)':<25} {t_fp32*1000:>8.1f} {t_fp16*1000:>8.1f} {t_int8*1000:>8.1f}")
-    print(f"  {'-'*49}")
-    print(f"  {'FP16 Accuracy Drop':<25} {(acc_fp32-acc_fp16)*100:>7.2f}%")
-    print(f"  {'INT8 Accuracy Drop':<25} {(acc_fp32-acc_int8)*100:>7.2f}%")
-    print(f"  {'FP16 Size Reduction':<25} {(1-size_fp16/size_fp32)*100:>7.1f}%")
-    print(f"  {'INT8 Size Reduction':<25} {(1-size_int8/size_fp32)*100:>7.1f}%")
+    print(f"  {'RAM After Eval (MB)':<25} {res_fp32['mem_after_mb']:>10.2f} {res_fp16['mem_after_mb']:>10.2f} {res_int8['mem_after_mb']:>10.2f}")
+    print(f"  {'RAM Delta (MB)':<25} {res_fp32['mem_used_mb']:>10.2f} {res_fp16['mem_used_mb']:>10.2f} {res_int8['mem_used_mb']:>10.2f}")
+
+    # CPU and time
+    print(f"  {'CPU % During Eval':<25} {res_fp32['cpu_pct']:>10.1f} {res_fp16['cpu_pct']:>10.1f} {res_int8['cpu_pct']:>10.1f}")
+    print(f"  {'Inference Time (ms)':<25} {t_fp32*1000:>10.1f} {t_fp16*1000:>10.1f} {t_int8*1000:>10.1f}")
+    print(f"  {'-'*60}")
+    print(f"  {'FP16 Accuracy Drop':<25} {(acc_fp32-acc_fp16)*100:>9.2f}%")
+    print(f"  {'INT8 Accuracy Drop':<25} {(acc_fp32-acc_int8)*100:>9.2f}%")
+    print(f"  {'FP16 Size Reduction':<25} {(1-size_fp16/size_fp32)*100:>9.1f}%")
+    print(f"  {'INT8 Size Reduction':<25} {(1-size_int8/size_fp32)*100:>9.1f}%")
